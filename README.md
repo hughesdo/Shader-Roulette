@@ -2,10 +2,9 @@
 
 **Drop in a song. Get a shader music video. Roll again and get a completely different one.**
 
-<!-- TODO: replace with the narrated walkthrough once it's recorded -->
-> 🎬 **Video walkthrough: coming soon**
->
-> `[YOUTUBE VIDEO GOES HERE]`
+🎬 **Video walkthrough** (click to watch on YouTube):
+
+[![How to Turn Shadertoy Shaders into Music Videos: Shader-Selector + Shader Roulette walkthrough](https://img.youtube.com/vi/fMOA9ntqaAc/maxresdefault.jpg)](https://youtu.be/fMOA9ntqaAc)
 
 ---
 
