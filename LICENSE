@@ -1,0 +1,37 @@
+MIT License
+
+Copyright (c) 2026 Don Hughes
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Bundled third-party code, included in shader-roulette.html and vendor/:
+
+- mp4-muxer 5.2.2 by Vanilagy, MIT License (https://github.com/Vanilagy/mp4-muxer).
+- AAC encoder (vendor/aac-wasm.js), kept in its own <script> block:
+  FFmpeg libavcodec AAC encoder compiled to WebAssembly, LGPL-2.1-or-later
+  (https://ffmpeg.org), with the bridge from @mediabunny/aac-encoder 1.61.3 by
+  Vanilagy, MPL-2.0 (https://github.com/Vanilagy/mediabunny). These keep their
+  own licenses, not MIT. License texts are in vendor/licenses/.
+- SuperTool effect shaders (vendor/supertool-effects.json, from
+  github.com/hughesdo/SuperTool public/shaders/effects). Each shader keeps the
+  header, credits and licence its file came with.
+
+Shaders and transitions loaded from the Shader-Selector library at runtime
+belong to their original authors; each one's shader.json credits the creator
+and links back to the original.

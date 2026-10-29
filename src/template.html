@@ -1,0 +1,297 @@
+<title>Shader Roulette</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23271a3d'/%3E%3Cpath d='M16 2a14 14 0 0 1 12.1 7L16 16z' fill='%23ffc94a'/%3E%3Cpath d='M28.1 9A14 14 0 0 1 23 28.1L16 16z' fill='%23ff6f91'/%3E%3Cpath d='M23 28.1A14 14 0 0 1 3.9 23L16 16z' fill='%2364d6c8'/%3E%3Cpath d='M3.9 23A14 14 0 0 1 16 2v14z' fill='%239b8cff'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23271a3d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap">
+<style>
+/* Plum edit bay. Stage on top, the cut laid out as a strip of shots under it, the cast below that.
+   Marigold is for the two things you press: roll and render. Section colours are data, not decoration. */
+:root {
+  color-scheme: dark;
+  --plum-0: #170f24;     /* page */
+  --plum-1: #21162f;     /* bands, drawer */
+  --plum-2: #2d203f;     /* wells, inputs */
+  --plum-line: #3d2e53;
+  --ink: #f4eefb;
+  --dim: #b4a6c8;
+  --faint: #7f7193;
+  --gold: #ffc94a;       /* primary actions */
+  --gold-ink: #2a1a00;
+  --rose: #ff6f91;
+  --bad: #ff8a8a;
+  /* section kinds on the strip */
+  --k-intro: #7d6bd6; --k-verse: #5a7fc7; --k-build: #d39b3a; --k-drop: #ff5d7a;
+  --k-peak: #ff8f4d; --k-break: #3fb8a8; --k-outro: #6e5a8a;
+  --font: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --r-s: 6px; --r-m: 12px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--plum-0); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.45; }
+body { min-height: 100vh; font-variation-settings: "wdth" 100; }
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--gold); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- top line */
+.top { display: flex; align-items: center; gap: 16px; padding: 14px 20px; }
+.wordmark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -0.01em; font-variation-settings: "wdth" 78, "opsz" 48; }
+.wordmark svg { width: 26px; height: 26px; }
+.libline { color: var(--dim); font-size: 13px; margin-left: 4px; }
+.libline[data-kind="error"] { color: var(--bad); }
+.top .spacer { flex: 1; }
+@media (max-width: 640px) { .top { flex-wrap: wrap; row-gap: 4px; } .libline { order: 3; width: 100%; margin: 0; } }
+.iconbtn { background: transparent; border: 1px solid var(--plum-line); border-radius: var(--r-s); padding: 7px 12px; cursor: pointer; color: var(--dim); }
+.iconbtn:hover { color: var(--ink); border-color: var(--dim); }
+
+/* ---------- stage */
+.stage-wrap { padding: 0 20px; }
+.stage { position: relative; margin: 0 auto; background: #000; border-radius: var(--r-m); overflow: hidden; max-height: 68vh; aspect-ratio: 16 / 9; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.drop { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px;
+  background: radial-gradient(120% 90% at 50% 110%, #3a2252 0%, var(--plum-1) 55%, var(--plum-0) 100%); }
+.drop[hidden] { display: none; }
+.drop h1 { margin: 0; font-size: clamp(40px, 8vw, 104px); line-height: 0.92; font-weight: 800; letter-spacing: -0.03em; font-variation-settings: "wdth" 75, "opsz" 96; }
+.drop p { margin: 14px auto 22px; max-width: 46ch; color: var(--dim); font-size: 16px; }
+.drop.over { outline: 3px dashed var(--gold); outline-offset: -14px; }
+.busy { margin-top: 18px; min-height: 1.4em; color: var(--ink); }
+.bar { height: 3px; background: var(--plum-line); border-radius: 2px; overflow: hidden; width: min(360px, 70vw); margin: 10px auto 0; }
+.bar i { display: block; height: 100%; width: var(--p, 0%); background: var(--gold); transition: width .15s linear; }
+.nowplaying { position: absolute; left: 14px; bottom: 12px; font-size: 13px; color: rgba(255,255,255,.85); text-shadow: 0 1px 6px rgba(0,0,0,.7); pointer-events: none; }
+.bigplay { position: absolute; inset: 0; margin: auto; width: 84px; height: 84px; border-radius: 50%; border: 0; background: var(--gold); color: var(--gold-ink); cursor: pointer; display: grid; place-items: center; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.bigplay svg { width: 34px; height: 34px; margin-left: 5px; }
+.bigplay[hidden] { display: none; }
+
+/* ---------- transport */
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 20px 8px; }
+.btn { border: 1px solid var(--plum-line); background: var(--plum-2); border-radius: var(--r-s); padding: 9px 16px; cursor: pointer; font-weight: 600; }
+.btn:hover:not(:disabled) { border-color: var(--dim); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.btn.gold:hover:not(:disabled) { filter: brightness(1.06); }
+.btn.quiet { background: transparent; }
+.play { width: 44px; height: 40px; padding: 0; display: grid; place-items: center; }
+.play svg { width: 16px; height: 16px; }
+.clock { color: var(--dim); min-width: 112px; }
+.transport .spacer { flex: 1; }
+.cutname { font-weight: 700; font-size: 17px; font-variation-settings: "wdth" 85; }
+.cutblurb { color: var(--dim); font-size: 13px; }
+
+/* ---------- the edit strip */
+.strip-wrap { padding: 6px 20px 0; }
+.strip { position: relative; height: 92px; user-select: none; cursor: pointer; touch-action: none; }
+.tiles { position: absolute; left: 0; right: 0; top: 0; height: 60px; border-radius: var(--r-s); overflow: hidden; background: var(--plum-1); }
+.tile { position: absolute; top: 0; height: 100%; background-size: cover; background-position: center; border-right: 1px solid var(--plum-0); }
+.tile.duet::after { content: ""; position: absolute; inset: auto 0 0 0; height: 5px; background: repeating-linear-gradient(90deg, var(--gold) 0 4px, transparent 4px 8px); }
+.tile.stutter { filter: saturate(1.4) contrast(1.1); }
+.tile .tr { position: absolute; left: -6px; top: 50%; width: 10px; height: 10px; transform: translateY(-50%) rotate(45deg); background: var(--ink); border: 2px solid var(--plum-0); z-index: 2; }
+.tile .tr.hard { background: var(--rose); }
+.secs { position: absolute; left: 0; right: 0; top: 66px; height: 20px; }
+.sec { position: absolute; top: 0; height: 100%; border-radius: 3px; font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.92); padding: 1px 6px; overflow: hidden; white-space: nowrap; }
+.effs { position: absolute; left: 0; right: 0; top: 61px; height: 3px; }
+.eff { position: absolute; height: 3px; background: var(--rose); border-radius: 2px; }
+.playhead { position: absolute; top: -4px; bottom: 0; width: 2px; background: var(--gold); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+.strip-empty { position: absolute; inset: 0 0 auto 0; height: 60px; border: 1px dashed var(--plum-line); border-radius: var(--r-s); display: grid; place-items: center; color: var(--faint); font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) {
+  .tiles.rolling .tile { animation: land .5s cubic-bezier(.2,.9,.25,1.15) both; animation-delay: calc(var(--i) * 14ms); }
+  @keyframes land { from { transform: translateY(-70%) rotateX(80deg); opacity: 0; } to { transform: none; opacity: 1; } }
+}
+
+/* ---------- under the strip */
+.lower { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; padding: 18px 20px 40px; }
+@media (max-width: 860px) { .lower { grid-template-columns: 1fr; } }
+h2 { font-size: 15px; font-weight: 700; margin: 0 0 10px; color: var(--ink); }
+.cast { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 10px; }
+.chip { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; background: var(--plum-1); border-radius: var(--r-s); padding: 6px; cursor: pointer; border: 1px solid transparent; text-align: left; }
+.chip:hover { border-color: var(--plum-line); }
+.chip.on { border-color: var(--gold); }
+.chip .th { width: 64px; height: 36px; border-radius: 4px; background: var(--plum-2) center / cover; }
+.chip b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip span { display: block; font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side p { color: var(--dim); font-size: 13.5px; margin: 0 0 12px; }
+.export { background: var(--plum-1); border-radius: var(--r-m); padding: 16px; }
+.export .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.export .est { color: var(--dim); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pill { font-size: 12px; border-radius: 99px; padding: 2px 9px; border: 1px solid var(--plum-line); color: var(--dim); background: transparent; cursor: help; }
+.pill[data-level="ok"] { color: #8be3b5; border-color: #2f6b4f; }
+.pill[data-level="warn"] { color: var(--gold); border-color: #6b5520; }
+.pill[data-level="bad"] { color: var(--bad); border-color: #6b2f3a; }
+.prog { margin-top: 12px; }
+.prog[hidden], .saverow[hidden] { display: none; }
+.prog .bar { width: 100%; margin: 6px 0 0; }
+.prog small { color: var(--dim); }
+.saverow { margin-top: 12px; }
+.mine { margin-top: 18px; }
+.mine .list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.mine .tag { font-size: 12px; background: var(--plum-2); border-radius: 99px; padding: 2px 4px 2px 10px; display: inline-flex; gap: 4px; align-items: center; }
+.mine .tag button { border: 0; background: transparent; color: var(--dim); cursor: pointer; padding: 0 4px; }
+.status { color: var(--dim); font-size: 13px; padding: 0 20px; min-height: 1.4em; }
+.status[data-kind="error"] { color: var(--bad); }
+
+/* ---------- drawer */
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 92vw); background: var(--plum-1); border-left: 1px solid var(--plum-line); padding: 18px 20px 30px; overflow-y: auto; transform: translateX(105%); transition: transform .22s ease; z-index: 20; }
+.drawer.open { transform: none; }
+.drawer header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.drawer h3 { margin: 22px 0 8px; font-size: 14px; font-weight: 700; }
+.field { margin: 10px 0; }
+.field label { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; color: var(--dim); margin-bottom: 4px; }
+.field label output { color: var(--ink); }
+.field select, .field input[type="text"], .field input[type="url"] { width: 100%; background: var(--plum-2); border: 1px solid var(--plum-line); border-radius: var(--r-s); padding: 7px 9px; }
+.field input[type="range"] { width: 100%; accent-color: var(--gold); }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; margin: 8px 0; color: var(--ink); }
+.check input { accent-color: var(--gold); margin-top: 3px; }
+.check small { display: block; color: var(--dim); }
+.hint { font-size: 12.5px; color: var(--faint); margin: 4px 0 0; }
+.scrim { position: fixed; inset: 0; background: rgba(10, 5, 18, .5); z-index: 19; }
+.scrim[hidden] { display: none; }
+</style>
+
+<header class="top">
+  <div class="wordmark">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2d203f"/><path d="M16 2a14 14 0 0 1 12.1 7L16 16z" fill="#ffc94a"/><path d="M28.1 9A14 14 0 0 1 23 28.1L16 16z" fill="#ff6f91"/><path d="M23 28.1A14 14 0 0 1 3.9 23L16 16z" fill="#64d6c8"/><path d="M3.9 23A14 14 0 0 1 16 2v14z" fill="#9b8cff"/><circle cx="16" cy="16" r="4" fill="#170f24"/></svg>
+    Shader Roulette
+  </div>
+  <span class="libline" id="libline">Opening the shader library…</span>
+  <span class="spacer"></span>
+  <button class="iconbtn" id="settingsBtn" aria-expanded="false" aria-controls="drawer">Settings</button>
+</header>
+
+<div class="stage-wrap">
+  <div class="stage" id="stage">
+    <canvas id="view"></canvas>
+    <div class="nowplaying" id="now"></div>
+    <button class="bigplay" id="bigPlay" hidden aria-label="Play"><svg viewBox="0 0 24 24"><path d="M5 3l15 9-15 9z" fill="currentColor"/></svg></button>
+    <div class="drop" id="drop">
+      <div>
+        <h1>Drop a song</h1>
+        <p id="dropText">It listens, picks a style, casts shaders from the library and cuts a music video to the beat. Roll again for a completely different one.</p>
+        <button class="btn gold" id="chooseBtn">Choose a song</button>
+        <div class="busy" id="busy" aria-live="polite"></div>
+        <div class="bar" id="busyBar" hidden><i></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="transport">
+  <button class="btn play" id="playBtn" disabled aria-label="Play"><svg viewBox="0 0 24 24"><path d="M5 3l15 9-15 9z" fill="currentColor"/></svg></button>
+  <span class="clock num" id="clock">0:00.0 / 0:00.0</span>
+  <button class="btn gold" id="rollBtn" disabled>Roll again</button>
+  <span class="spacer"></span>
+  <div>
+    <div class="cutname" id="cutName"></div>
+    <div class="cutblurb" id="cutBlurb"></div>
+  </div>
+</div>
+
+<div class="strip-wrap">
+  <div class="strip" id="strip" aria-label="The cut. Click to jump.">
+    <div class="tiles" id="tiles"></div>
+    <div class="effs" id="effs"></div>
+    <div class="secs" id="secs"></div>
+    <div class="playhead" id="playhead" hidden></div>
+    <div class="strip-empty" id="stripEmpty">Each shot of the video shows up here, sized by how long it plays.</div>
+  </div>
+</div>
+<div class="status" id="status" aria-live="polite"></div>
+
+<section class="lower">
+  <div>
+    <h2 id="castTitle">The cast</h2>
+    <div class="cast" id="cast"></div>
+    <div class="mine" id="mineBox" hidden>
+      <h2>Your shaders</h2>
+      <p class="hint">Added from your computer. They're in every roll until you remove them.</p>
+      <div class="list" id="mineList"></div>
+    </div>
+  </div>
+  <aside class="side">
+    <div class="export">
+      <h2>Save the video</h2>
+      <p class="est" id="estimate">Load a song to see the file size.</p>
+      <div class="chips" id="preflight"></div>
+      <div class="row">
+        <button class="btn gold" id="renderBtn" disabled title="Renders every frame at full quality, faster or slower than real time depending on your GPU">Render MP4</button>
+        <button class="btn" id="recBtn" disabled title="Records the screen in real time while the song plays. Use this if Render MP4 isn't available.">Record live</button>
+        <button class="btn quiet" id="cancelBtn" hidden>Cancel</button>
+      </div>
+      <div class="prog" id="prog" hidden><small id="progText"></small><div class="bar"><i id="progBar"></i></div></div>
+      <div class="saverow" id="saveRow" hidden>
+        <p class="est" id="saveInfo"></p>
+        <div class="chips" id="saveChips"></div>
+        <div class="row"><button class="btn gold" id="saveBtn">Save video</button></div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <h2>Credits</h2>
+      <p>Every shader belongs to its author. Copy the list into your post.</p>
+      <button class="btn" id="copyCredits" disabled>Copy credits</button>
+    </div>
+  </aside>
+</section>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Settings">
+  <header><h2 style="margin:0">Settings</h2><button class="iconbtn" id="closeDrawer">Close</button></header>
+
+  <h3>The video</h3>
+  <div class="field"><label for="res">Size</label>
+    <select id="res">
+      <option value="1280x720">1280 × 720</option>
+      <option value="1920x1080">1920 × 1080</option>
+      <option value="2560x1440">2560 × 1440</option>
+      <option value="3840x2160">3840 × 2160 (4K)</option>
+      <option value="1080x1920">1080 × 1920 (vertical)</option>
+      <option value="1080x1080">1080 × 1080 (square)</option>
+      <option value="1080x1350">1080 × 1350 (portrait)</option>
+    </select></div>
+  <div class="field"><label for="fps">Frame rate</label>
+    <select id="fps"><option value="24">24 fps</option><option value="30">30 fps</option><option value="60">60 fps</option></select></div>
+  <div class="field"><label for="mbps">Quality <output id="mbpsVal"></output></label>
+    <input type="range" id="mbps" min="4" max="40" step="2"></div>
+  <div class="field"><label for="preview">Preview sharpness <output id="previewVal"></output></label>
+    <input type="range" id="preview" min="0.25" max="1" step="0.05">
+    <p class="hint">Only affects playback here. Renders are always full size.</p></div>
+
+  <h3>How it cuts</h3>
+  <div class="field"><label for="style">Style</label>
+    <select id="style">
+      <option value="">Surprise me</option>
+      <option value="pulse">Pulse: cuts on the bar, hits on the kick</option>
+      <option value="drift">Drift: long takes, slow dissolves</option>
+      <option value="story">Story: one world per section</option>
+      <option value="chaos">Chaos: fast cuts, double exposures, glitches</option>
+      <option value="cinema">Cinema: widescreen, film grades</option>
+      <option value="mirror">Mirror World: kaleidoscopes</option>
+    </select></div>
+  <div class="field"><label for="pace">Pace <output id="paceVal"></output></label><input type="range" id="pace" min="0" max="1" step="0.05"></div>
+  <div class="field"><label for="remix">Remix <output id="remixVal"></output></label><input type="range" id="remix" min="0" max="1.5" step="0.05">
+    <p class="hint">At zero every shader plays exactly as its author made it. Higher adds lenses, colour grades, double exposures and SuperTool effects.</p></div>
+  <div class="field"><label for="hits">Hits <output id="hitsVal"></output></label><input type="range" id="hits" min="0" max="1.5" step="0.05">
+    <p class="hint">Flashes, zoom punches, shakes and freezes on the drums.</p></div>
+  <label class="check"><input type="checkbox" id="duets"><span>Double exposures<small>Two shaders blended in one shot.</small></span></label>
+  <label class="check"><input type="checkbox" id="libTrans"><span>Library transitions<small>The gl-transitions from Shader-Selector, alongside the built-in ones.</small></span></label>
+  <label class="check"><input type="checkbox" id="effects"><span>SuperTool effects<small>Post-process looks laid over shots and sections.</small></span></label>
+  <label class="check"><input type="checkbox" id="credits"><span>Shader names on screen<small>A small caption the first time each shader appears.</small></span></label>
+  <div class="field"><label for="seed">Roll code</label><input type="text" id="seed" spellcheck="false" autocomplete="off" placeholder="Random every roll">
+    <p class="hint">Type a code from an earlier roll to get that cut back for the same song.</p></div>
+
+  <h3>Shaders</h3>
+  <div class="field"><label for="libUrl">Library address</label><input type="url" id="libUrl" spellcheck="false" placeholder="Shader-Selector on GitHub Pages"></div>
+  <button class="btn" id="libReload">Reload library</button>
+  <p class="hint">Any Shader-Selector library folder works. Leave it empty for the public one.</p>
+  <div class="field" style="margin-top:14px"><button class="btn" id="addMine">Add your own .glsl</button>
+    <p class="hint">Shadertoy-style code with mainImage(), music on iChannel0. You can also drop .glsl files onto the page.</p></div>
+</aside>
+
+<input type="file" id="songFile" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus" hidden>
+<input type="file" id="glslFile" accept=".glsl,.frag,.fs,.txt" multiple hidden>
+
+<script>/*MUXER*/</script>
+<script>/*AACWASM*/</script>
+<script>/*EFFECTS*/</script>
+<script>
+/*APP*/
+</script>
